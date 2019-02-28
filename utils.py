@@ -88,6 +88,14 @@ def flip2d(img, axis=None):
     Returns:
         flipped_img: nested list (int), the flipped image.
     """
-    # TODO: implement this function.
-    raise NotImplementedError
-    return flipped_img
+    img_copy = img.copy()
+    if not axis:
+        img_copy = flip_y(flip_x(img_copy))
+    elif axis==0:
+        img_copy = flip_x(img_copy)
+    elif axis==1:
+        img_copy = flip_y(img_copy)
+    else:
+        raise ValueError("Unknown axis=",axis)
+    return img_copy
+    

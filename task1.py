@@ -104,8 +104,42 @@ def convolve2d(img, kernel):
     Returns:
         img_conv: nested list (int), image.
     """
-    # TODO: implement this function.
-    raise NotImplementedError
+    if len(kernel)%2==0:
+        raise AssertionError("Kernel dimensions should be odd")
+    if len(kernel)!=len(kernel[0]):
+        raise AssertionError("Not a square kernel")
+
+    #Flip the kernel for convolution
+    kernel = utils.flip2d(kernel)
+    
+    #Padding length is floor(0.5 * kernel dimension). 
+    padding_len = len(kernel)//2
+    #Pad the image along x and y dimensions with padding_len
+    padded_img = utils.zero_pad(img.copy(), padding_len, padding_len )
+    
+    #Calculate the offset which the image has to traverse
+    offset = len(kernel)//2
+
+    #Kernel function to be convolved over every window
+    def calculate_pixel(i,j):
+        nonlocal padded_img, kernel
+        nonlocal offset
+        sum = 0.0
+        # print("Convolving....")
+        # print(np.array(padded_img)[i-offset:i+offset+1,j-offset:j+offset+1])
+        # print(np.array(kernel))
+        for a,x in enumerate(range(i-offset,i+offset+1)):
+            for b,y in enumerate(range(j-offset,j+offset+1)):
+                sum += padded_img[x][y] * kernel[a][b]
+        # print(sum)
+        # input()
+        return sum
+
+    img_conv = img.copy()
+
+    for u,i in enumerate(range(offset, len(img)-offset + 2)):
+        for v,j in enumerate(range(offset, len(img[0])-offset + 2)):
+            img_conv[u][v] = calculate_pixel(i,j) * 1.0
     return img_conv
 
 
@@ -125,9 +159,19 @@ def normalize(img):
     Returns:
         normalized_img: nested list (int), normalized image.
     """
-    # TODO: implement this function.
-    raise NotImplementedError
-    return img
+
+    #Get the max and min pixel value of the images
+    min_img, max_img = min([min(row) for row in img]), max([max(row) for row in img])
+    #Store the denominator to avoid repetitive calculation :-)
+    denominator = (max_img - min_img)*1.0
+    #Create a copy of the image
+    norm_img = img.copy()
+    
+    #Normalize
+    for i in range(len(img)):
+        for j in range(len(img)):
+            norm_img [i][j] = ((img[i][j] - min_img) * 1.0 / denominator)
+    return norm_img
 
 
 def detect_edges(img, kernel, norm=True):
@@ -142,8 +186,13 @@ def detect_edges(img, kernel, norm=True):
         img_edge: nested list (int), image containing detected edges.
     """
     # TODO: detect edges using convolve2d and normalize the image containing detected edges using normalize.
-    raise NotImplementedError
-    return img_edges
+    #Making sure the kernel len is odd
+
+    #Convolve the the image  and filter and returns the resulting matrix
+    convoled_img = convolve2d(img, kernel)
+    #Normalize if norm is true
+    return convoled_img if not norm else normalize(convoled_img)
+
 
 
 def edge_magnitude(edge_x, edge_y):
@@ -152,7 +201,7 @@ def edge_magnitude(edge_x, edge_y):
     Hints:
         Combine edges along two orthogonal directions using the following equation:
 
-        edge_mag = sqrt(edge_x ** 2 + edge_y **).
+        edge_mag = sqrt(edge_x ** 2 + edge_y ** 2).
 
         Make sure that you normalize the edge_mag, so that the maximum pixel value is 1.
 
@@ -163,9 +212,13 @@ def edge_magnitude(edge_x, edge_y):
     Returns:
         edge_mag: nested list (int), image containing magnitude of detected edges.
     """
-    # TODO: implement this function.
-    raise NotImplementedError
-    return edge_mag
+    
+    edge_mag = edge_y.copy()
+    for x in range(len(edge_x)):
+        for y in range(len(edge_x[0])):
+            edge_mag[x][y] = edge_x[x][y]**2 + edge_y[x][y]**2
+    edge_mag = np.sqrt(edge_mag)
+    return normalize(edge_mag)
 
 
 def main():
@@ -186,7 +239,18 @@ def main():
         os.makedirs(args.rs_directory)
 
     img_edge_x = detect_edges(img, kernel_x, False)
-    img_edge_x = np.asarray(img_edge_x)
+    img_edge_x = np.asarray(img_edge_x, dtype=np.float32)
+    # Check
+    # from scipy import signal
+    # actual = signal.convolve2d(img, kernel_x, 'same')
+    # if(img_edge_x == actual).all():
+    #     print("Passing")
+    # else:
+    #     # img_edge_x = actual
+    #     print(img_edge_x)
+    #     print(actual)
+    #     print("Failing")
+    #
     write_image(normalize(img_edge_x), os.path.join(args.rs_directory, "{}_edge_x.jpg".format(args.kernel.lower())))
 
     img_edge_y = detect_edges(img, kernel_y, False)
