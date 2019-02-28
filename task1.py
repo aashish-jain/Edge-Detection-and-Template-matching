@@ -115,7 +115,7 @@ def convolve2d(img, kernel):
     #Padding length is floor(0.5 * kernel dimension). 
     padding_len = len(kernel)//2
     #Pad the image along x and y dimensions with padding_len
-    padded_img = utils.zero_pad(img.copy(), padding_len, padding_len )
+    padded_img = utils.zero_pad(img, padding_len, padding_len )
     
     #Calculate the offset which the image has to traverse
     offset = len(kernel)//2
@@ -135,7 +135,7 @@ def convolve2d(img, kernel):
         # input()
         return sum
 
-    img_conv = img.copy()
+    img_conv = [[0.0 for _ in range(len(img[0]))] for _ in range(len(img))]
 
     for u,i in enumerate(range(offset, len(img)-offset + 2)):
         for v,j in enumerate(range(offset, len(img[0])-offset + 2)):
@@ -165,7 +165,7 @@ def normalize(img):
     #Store the denominator to avoid repetitive calculation :-)
     denominator = (max_img - min_img)*1.0
     #Create a copy of the image
-    norm_img = img.copy()
+    norm_img = copy.deepcopy(img)
     
     #Normalize
     for i in range(len(img)):
@@ -213,7 +213,7 @@ def edge_magnitude(edge_x, edge_y):
         edge_mag: nested list (int), image containing magnitude of detected edges.
     """
     
-    edge_mag = edge_y.copy()
+    edge_mag = copy.deepcopy(edge_y)
     for x in range(len(edge_x)):
         for y in range(len(edge_x[0])):
             edge_mag[x][y] = edge_x[x][y]**2 + edge_y[x][y]**2
@@ -240,17 +240,6 @@ def main():
 
     img_edge_x = detect_edges(img, kernel_x, False)
     img_edge_x = np.asarray(img_edge_x, dtype=np.float32)
-    # Check
-    # from scipy import signal
-    # actual = signal.convolve2d(img, kernel_x, 'same')
-    # if(img_edge_x == actual).all():
-    #     print("Passing")
-    # else:
-    #     # img_edge_x = actual
-    #     print(img_edge_x)
-    #     print(actual)
-    #     print("Failing")
-    #
     write_image(normalize(img_edge_x), os.path.join(args.rs_directory, "{}_edge_x.jpg".format(args.kernel.lower())))
 
     img_edge_y = detect_edges(img, kernel_y, False)
