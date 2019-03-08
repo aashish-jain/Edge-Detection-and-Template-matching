@@ -65,7 +65,12 @@ def detect(img, template):
             y: column that the character appears (starts from 0).
     """
     # TODO: implement this function.
-    raise NotImplementedError
+    ccoeff_normed_mat = get_ccoeff_normed(img, template)
+    threshold = 0.7
+    #Get the coordinates
+    #Inverted as the x maps to columns and y maps to rows from pixel coords to matrix
+    coordinates = [(y,x) for x in range(len(ccoeff_normed_mat)) \
+        for y in range(len(ccoeff_normed_mat[0])) if ccoeff_normed_mat[x][y] >= threshold]    
     return coordinates
 
 
@@ -76,12 +81,61 @@ def save_results(coordinates, template, template_name, rs_directory):
     with open(os.path.join(rs_directory, template_name), "w") as file:
         json.dump(results, file)
 
+#Reference - https://docs.opencv.org/2.4/doc/tutorials/imgproc/histograms/template_matching/template_matching.html
+def get_ccoeff_normed(img, template):
+    
+    arr_element_sub = lambda arr, val: [arr_val - val for arr_val in arr]
+    element_squared_sum = lambda arr: sum(z**2 for z in arr)
+    sum_normed = lambda arr, const: sum(arr) / const
+    sum_of_prods = lambda arr1, arr2: sum([a1_val * a2_val for a1_val, a2_val in zip(arr1, arr2)])
+    flatten = lambda arr : [arr_val for arr_row in arr for arr_val in arr_row]
+
+    w ,h =  len(template), len(template[0]),
+    wh_prod = w*h*1.0
+    
+    ccoeff_normed = [[0.0 for _ in range(len(img[0]) - h + 1)] for _ in range(len(img) - w + 1)]
+
+    #Is same for every sliding window as template doesn't change
+    template = flatten(template)
+    t_sum_normed = sum_normed(template, wh_prod)
+    t_dash = arr_element_sub(template, t_sum_normed)
+    t_dash_sum_squared = element_squared_sum(t_dash)
+
+    #Hack for zeros (make sure the denomintor doesn't become zero)
+    if(t_dash_sum_squared == 0):
+        t_dash_sum_squared = 1e-6
+
+    def get_ccoeff_normed_val(i, j,):
+
+        #Flatten the image
+        im = [img[x][y] for x in range(i, i + w) for y in range(j, j + h)]
+
+        i_sum_normed = sum_normed(im, wh_prod)
+        i_dash = arr_element_sub(im, i_sum_normed)
+        i_dash_sum_squared = element_squared_sum(i_dash)
+        #Hack for zeros (make sure the denomintor doesn't become zero)
+        if i_dash_sum_squared == 0:
+            i_dash_sum_squared = 1e-6
+                    
+        numerator = sum_of_prods(t_dash, i_dash)
+        denominator = np.sqrt(t_dash_sum_squared * i_dash_sum_squared)
+        
+        return numerator/denominator
+    
+    for x in range(len(ccoeff_normed) - w):
+        for y in range(len(ccoeff_normed[0]) - h):
+            ccoeff_normed[x][y] = get_ccoeff_normed_val(x, y)
+    return ccoeff_normed
+
 
 def main():
     args = parse_args()
 
     img = read_image(args.img_path)
     template = read_image(args.template_path)
+    #Added begins
+    show_image(np.array(img), 100000)
+    #Added ends
 
     coordinates = detect(img, template)
 

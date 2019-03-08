@@ -34,7 +34,6 @@ prewitt_y = [[1] * 3, [0] * 3, [-1] * 3]
 sobel_x = [[1, 0, -1], [2, 0, -2], [1, 0, -1]]
 sobel_y = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]]
 
-
 def parse_args():
     parser = argparse.ArgumentParser(description="cse 473/573 project 1.")
     parser.add_argument(
@@ -79,8 +78,9 @@ def write_image(img, img_saving_path):
         img = np.asarray(img, dtype=np.uint8)
     elif isinstance(img, np.ndarray):
         if not img.dtype == np.uint8:
-            assert np.max(img) <= 1, "Maximum pixel value {:.3f} is greater than 1".format(np.max(img))
-            img = (255 * img).astype(np.uint8)
+            # assert np.max(img) <= 1, "Maximum pixel value {:.3f} is greater than 1".format(np.max(img))
+            # img = (255 * img).astype(np.uint8)
+            pass
     else:
         raise TypeError("img is neither a list nor a ndarray.")
 
@@ -135,7 +135,7 @@ def convolve2d(img, kernel):
         # input()
         return sum
 
-    img_conv = [[0.0 for _ in range(len(img[0]))] for _ in range(len(img))]
+    img_conv = copy.deepcopy(img)
 
     for u,i in enumerate(range(offset, len(img)-offset + 2)):
         for v,j in enumerate(range(offset, len(img[0])-offset + 2)):
@@ -169,8 +169,8 @@ def normalize(img):
     
     #Normalize
     for i in range(len(img)):
-        for j in range(len(img)):
-            norm_img [i][j] = ((img[i][j] - min_img) * 1.0 / denominator)
+        for j in range(len(img[0])):
+            norm_img [i][j] = 255 * ((img[i][j] - min_img) * 1.0 / denominator)
     return norm_img
 
 
@@ -239,11 +239,11 @@ def main():
         os.makedirs(args.rs_directory)
 
     img_edge_x = detect_edges(img, kernel_x, False)
-    img_edge_x = np.asarray(img_edge_x, dtype=np.float32)
+    # img_edge_x = np.asarray(img_edge_x, dtype=np.float32)
     write_image(normalize(img_edge_x), os.path.join(args.rs_directory, "{}_edge_x.jpg".format(args.kernel.lower())))
 
     img_edge_y = detect_edges(img, kernel_y, False)
-    img_edge_y = np.asarray(img_edge_y)
+    # img_edge_y = np.asarray(img_edge_y)
     write_image(normalize(img_edge_y), os.path.join(args.rs_directory, "{}_edge_y.jpg".format(args.kernel.lower())))
 
     img_edges = edge_magnitude(img_edge_x, img_edge_y)
