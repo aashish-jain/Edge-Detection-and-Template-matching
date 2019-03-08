@@ -51,7 +51,7 @@ def parse_args():
     return args
 
 
-def detect(img, template):
+def detect(img, template, threshold=0.7):
     """Detect a given character, i.e., the character in the template image.
 
     Args:
@@ -66,7 +66,6 @@ def detect(img, template):
     """
     # TODO: implement this function.
     ccoeff_normed_mat = get_ccoeff_normed(img, template)
-    threshold = 0.7
     #Get the coordinates
     #Inverted as the x maps to columns and y maps to rows from pixel coords to matrix
     coordinates = [(y,x) for x in range(len(ccoeff_normed_mat)) \
