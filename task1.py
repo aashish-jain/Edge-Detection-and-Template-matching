@@ -78,8 +78,6 @@ def write_image(img, img_saving_path):
         img = np.asarray(img, dtype=np.uint8)
     elif isinstance(img, np.ndarray):
         if not img.dtype == np.uint8:
-            # assert np.max(img) <= 1, "Maximum pixel value {:.3f} is greater than 1".format(np.max(img))
-            # img = (255 * img).astype(np.uint8)
             pass
     else:
         raise TypeError("img is neither a list nor a ndarray.")
@@ -126,8 +124,6 @@ def convolve2d(img, kernel):
         nonlocal offset
         sum = 0.0
         # print("Convolving....")
-        # print(np.array(padded_img)[i-offset:i+offset+1,j-offset:j+offset+1])
-        # print(np.array(kernel))
         for a,x in enumerate(range(i-offset,i+offset+1)):
             for b,y in enumerate(range(j-offset,j+offset+1)):
                 sum += padded_img[x][y] * kernel[a][b]
@@ -239,11 +235,9 @@ def main():
         os.makedirs(args.rs_directory)
 
     img_edge_x = detect_edges(img, kernel_x, False)
-    # img_edge_x = np.asarray(img_edge_x, dtype=np.float32)
     write_image(normalize(img_edge_x), os.path.join(args.rs_directory, "{}_edge_x.jpg".format(args.kernel.lower())))
 
     img_edge_y = detect_edges(img, kernel_y, False)
-    # img_edge_y = np.asarray(img_edge_y)
     write_image(normalize(img_edge_y), os.path.join(args.rs_directory, "{}_edge_y.jpg".format(args.kernel.lower())))
 
     img_edges = edge_magnitude(img_edge_x, img_edge_y)

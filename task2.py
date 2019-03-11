@@ -77,6 +77,10 @@ def save_results(coordinates, template, template_name, rs_directory):
     results = {}
     results["coordinates"] = sorted(coordinates, key=lambda x: x[0])
     results["templat_size"] = (len(template), len(template[0]))
+    #creates the results folder if it doesn't exists
+    #Doesn't support multiple folder depth
+    if not os.path.exists(rs_directory):
+        os.mkdir(rs_directory)
     with open(os.path.join(rs_directory, template_name), "w") as file:
         json.dump(results, file)
 
@@ -129,14 +133,14 @@ def get_ccoeff_normed(img, template):
 
 def main():
     args = parse_args()
+    alphabet = args.template_path.split('/')[-1].split('.')[0]
 
     img = read_image(args.img_path)
     template = read_image(args.template_path)
-    #Added begins
-    show_image(np.array(img), 100000)
-    #Added ends
+    threshold_dictionary = {'a':0.62, 'b':0.74, 'c':0.75};
+    threshold = threshold_dictionary[alphabet]
+    coordinates = detect(img, template, threshold)
 
-    coordinates = detect(img, template)
 
     template_name = "{}.json".format(os.path.splitext(os.path.split(args.template_path)[1])[0])
     save_results(coordinates, template, template_name, args.rs_directory)
